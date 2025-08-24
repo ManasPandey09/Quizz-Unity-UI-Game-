@@ -1,22 +1,29 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 public class Quiz : MonoBehaviour
 {
     [SerializeField] TextMeshProUGUI questionText;
-    [SerializeField] QuestionSO question;
+
+    [SerializeField] List<QuestionSO> questions = new List<QuestionSO>();
+    QuestionSO currentQuestion;
     [SerializeField] GameObject[] answerButtons;
     int correctAnswerIndex;
     [SerializeField] Sprite defaultAnswerSprite;
     [SerializeField] Sprite correctAnswerSprite;
     [SerializeField] Image timerImage;
 
+    [SerializeField] TextMeshProUGUI scoreText;
+    Score score;
+
     bool hasAnsweredEarly;
     Timer timer;
     void Start()
     {
+        scoreText.text = "Score: 0%";
         timer = FindFirstObjectByType<Timer>();
-        nextQuestion();
+        score = FindFirstObjectByType<Score>();
     }
 
     void Update()
@@ -37,45 +44,62 @@ public class Quiz : MonoBehaviour
 
     void displayQuestion()
     {
-        questionText.text = question.GetQuestion();
+        questionText.text = currentQuestion.GetQuestion();
         for (int i = 0; i < answerButtons.Length; i++)
         {
             TextMeshProUGUI buttonText = answerButtons[i].GetComponentInChildren<TextMeshProUGUI>();
             if (buttonText != null)
             {
-                buttonText.text = question.GetAnswer(i);
+                buttonText.text = currentQuestion.GetAnswer(i);
             }
         }
     }
 
     void nextQuestion()
     {
-        setButtonState(true);
-        setDefaultButtonSprites();
-        displayQuestion();
+        if (questions.Count > 0)
+        {
+            setButtonState(true);
+            setDefaultButtonSprites();
+            getRandomQuestion();
+            displayQuestion();
+            score.IncrementQuestionsSeen();
+        }
+    }
+    
+    void getRandomQuestion()
+    {
+        int index = Random.Range(0, questions.Count);
+        currentQuestion = questions[index];
+        if (questions.Contains(currentQuestion))
+        {
+            questions.Remove(currentQuestion);
+        }
     }
 
     public void onAnswerSelected(int index)
-    {   
+    {
         hasAnsweredEarly = true;
         displayAnswer(index);
         setButtonState(false);
         timer.cancelTimer();
+        scoreText.text = "Score: " + score.GetScorePercentage() + "%";
     }
 
     void displayAnswer(int index)
     {
         Image buttonImage;
-        if (index == question.GetCorrectAnswerIndex())
+        if (index == currentQuestion.GetCorrectAnswerIndex())
         {
             questionText.text = "Correct Answer!";
             buttonImage = answerButtons[index].GetComponent<Image>();
             buttonImage.sprite = correctAnswerSprite;
+            score.IncrementCorrectAnswers();
         }
         else
         {
-            correctAnswerIndex = question.GetCorrectAnswerIndex();
-            questionText.text = "Wrong Answer! Correct answer is: " + question.GetAnswer(correctAnswerIndex);
+            correctAnswerIndex = currentQuestion.GetCorrectAnswerIndex();
+            questionText.text = "Wrong Answer! Correct answer is: " + currentQuestion.GetAnswer(correctAnswerIndex);
             buttonImage = answerButtons[correctAnswerIndex].GetComponent<Image>();
             buttonImage.sprite = correctAnswerSprite;
         }
