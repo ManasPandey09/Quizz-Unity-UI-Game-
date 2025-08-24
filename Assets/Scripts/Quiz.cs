@@ -17,13 +17,13 @@ public class Quiz : MonoBehaviour
     [SerializeField] TextMeshProUGUI scoreText;
     Score score;
 
-    bool hasAnsweredEarly;
+    bool hasAnsweredEarly=true;
     Timer timer;
     [SerializeField] Slider progressBar;
 
     public bool isComplete;
 
-    void Start()
+    void Awake()
     {
         scoreText.text = "Score: 0%";
         timer = FindFirstObjectByType<Timer>();
@@ -37,8 +37,13 @@ public class Quiz : MonoBehaviour
         timerImage.fillAmount = timer.fillFraction;
         if (timer.loadNextQuestion)
         {
-            nextQuestion();
+            if (progressBar.value == progressBar.maxValue)
+            {
+                isComplete = true;
+                return;
+        }
             timer.loadNextQuestion = false;
+            nextQuestion();
             hasAnsweredEarly = false;
         }
         else if (!hasAnsweredEarly && !timer.isAnsweringQuestion)
@@ -91,10 +96,6 @@ public class Quiz : MonoBehaviour
         setButtonState(false);
         timer.cancelTimer();
         scoreText.text = "Score: " + score.GetScorePercentage() + "%";
-        if (progressBar.value == progressBar.maxValue)
-        {
-            isComplete = true;
-        }
     }
 
     void displayAnswer(int index)
@@ -127,7 +128,10 @@ public class Quiz : MonoBehaviour
 
     void setDefaultButtonSprites()
     {
-        Image buttonImage = answerButtons[correctAnswerIndex].GetComponent<Image>();
-        buttonImage.sprite = defaultAnswerSprite;
+        for (int i = 0; i < answerButtons.Length; i++)
+        {
+            Image buttonImage = answerButtons[i].GetComponent<Image>();
+            buttonImage.sprite = defaultAnswerSprite;
+        }
     }
 }
