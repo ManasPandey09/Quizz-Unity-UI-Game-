@@ -19,11 +19,17 @@ public class Quiz : MonoBehaviour
 
     bool hasAnsweredEarly;
     Timer timer;
+    [SerializeField] Slider progressBar;
+
+    public bool isComplete;
+
     void Start()
     {
         scoreText.text = "Score: 0%";
         timer = FindFirstObjectByType<Timer>();
         score = FindFirstObjectByType<Score>();
+        progressBar.maxValue = questions.Count;
+        progressBar.value = 0;
     }
 
     void Update()
@@ -64,6 +70,7 @@ public class Quiz : MonoBehaviour
             getRandomQuestion();
             displayQuestion();
             score.IncrementQuestionsSeen();
+            progressBar.value++;
         }
     }
     
@@ -84,6 +91,10 @@ public class Quiz : MonoBehaviour
         setButtonState(false);
         timer.cancelTimer();
         scoreText.text = "Score: " + score.GetScorePercentage() + "%";
+        if (progressBar.value == progressBar.maxValue)
+        {
+            isComplete = true;
+        }
     }
 
     void displayAnswer(int index)
